@@ -18,14 +18,6 @@ module.exports = {
           key: "id",
         },
       },
-      id_petugas: {
-        type: Sequelize.UUID,
-        allowNull: false,
-        references: {
-          model: "petugas",
-          key: "id",
-        },
-      },
       tanggal: {
         type: Sequelize.DATE,
         allowNull: false,
@@ -33,6 +25,11 @@ module.exports = {
       total_berat: {
         type: Sequelize.INTEGER,
         allowNull: false,
+      },
+      status: {
+        type: Sequelize.ENUM("pending", "approved", "rejected"),
+        allowNull: false,
+        defaultValue: "pending",
       },
       createdBy: {
         type: Sequelize.UUID,

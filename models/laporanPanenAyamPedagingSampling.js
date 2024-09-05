@@ -9,10 +9,6 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "id_kandang",
       });
 
-      LaporanPanenAyamPedagingSampling.belongsTo(models.Petugas, {
-        foreignKey: "id_petugas",
-      });
-
       LaporanPanenAyamPedagingSampling.belongsTo(models.User, {
         foreignKey: "createdBy",
       });
@@ -35,14 +31,6 @@ module.exports = (sequelize, DataTypes) => {
           key: "id",
         },
       },
-      id_petugas: {
-        type: DataTypes.UUID,
-        allowNull: false,
-        references: {
-          model: "Petugas", // Make sure this matches the actual table name
-          key: "id",
-        },
-      },
       tanggal: {
         type: DataTypes.DATE,
         allowNull: false,
@@ -50,6 +38,11 @@ module.exports = (sequelize, DataTypes) => {
       total_berat: {
         type: DataTypes.INTEGER,
         allowNull: false,
+      },
+      status: {
+        type: DataTypes.ENUM("pending", "approved", "rejected"),
+        allowNull: false,
+        defaultValue: "pending",
       },
       createdBy: {
         type: DataTypes.UUID,
