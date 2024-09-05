@@ -36,7 +36,7 @@ exports.createKandang = async (req, res) => {
 
     for (let i = 0; i < req.files.length; i++) {
       const file = req.files[i];
-      const fileName = `Kandang-${Date.now()}-${file.originalname}`;
+      const fileName = `Kandang-${Date.now()}-${file.originalname.trim()}`;
 
       const uploadResult = await uploadFileToSpace(
         file.buffer,
@@ -219,7 +219,7 @@ exports.updateKandang = async (req, res) => {
       if (req.files && req.files.length > 0) {
         for (let i = 0; i < req.files.length; i++) {
           const file = req.files[i];
-          const fileName = `Kandang-${Date.now()}-${file.originalname}`;
+          const fileName = `Kandang-${Date.now()}-${file.originalname.trim()}`;
 
           const uploadResult = await uploadFileToSpace(
             file.buffer,
@@ -230,9 +230,9 @@ exports.updateKandang = async (req, res) => {
         }
 
         for (let i = 0; i < uploadedImages.length; i++) {
-          await image.create({
-            image: uploadedImages[i],
-            KandangId: id,
+          await KandangImage.create({
+            url: uploadedImages[i],
+            id_kandang: id,
           });
         }
       }
