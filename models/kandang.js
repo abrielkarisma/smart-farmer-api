@@ -7,6 +7,10 @@ module.exports = (sequelize, DataTypes) => {
       Kandang.belongsTo(models.User, {
         foreignKey: "id_pemilik",
       });
+
+      Kandang.hasMany(models.KandangImage, {
+        foreignKey: "id_kandang",
+      });
     }
   }
 
@@ -26,6 +30,14 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: false,
       },
+      longitude: {
+        type: DataTypes.DOUBLE,
+        allowNull: false,
+      },
+      latitude: {
+        type: DataTypes.DOUBLE,
+        allowNull: false,
+      },
       jumlah_ayam: {
         type: DataTypes.INTEGER,
         allowNull: false,
@@ -37,6 +49,11 @@ module.exports = (sequelize, DataTypes) => {
           model: "User",
           key: "id",
         },
+      },
+      isDeleted: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
       },
       createdAt: {
         allowNull: false,

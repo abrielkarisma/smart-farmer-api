@@ -92,6 +92,49 @@ async function signIn(req, res) {
   }
 }
 
+async function signUpPetugas(req, res) {
+  const { nama, email, password, phone, role, kode_owner } = req.body;
+
+  const validation = await validateUser({ email, password });
+
+  if (validation.error) {
+    return res.status(400).json({ success: false, message: validation.error });
+  }
+
+  try {
+    const existingUser = await User.findOne({ where: { email } });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "Email already in use",
+      });
+    }
+    const trimmedPassword = password.trim();
+    const hashedPassword = await bcrypt.hash(trimmedPassword, 10);
+    const newUser = await User.create({
+      nama,
+      email,
+      password: hashedPassword,
+      no_telp: phone,
+      role,
+    });
+
+    const accessToken = generateAccessToken(newUser);
+
+    return res.status(200).json({
+      success: true,
+      message: "User created successfully",
+      token: accessToken,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      sucess: false,
+      message: "Internal server error",
+    });
+  }
+}
+
 // async function signOut(req, res) {
 //   try {
 //     const token = req.headers.authorization.split(" ")[1];

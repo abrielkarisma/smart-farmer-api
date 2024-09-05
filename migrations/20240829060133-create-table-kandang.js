@@ -18,6 +18,14 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false,
       },
+      longitude: {
+        type: Sequelize.DOUBLE,
+        allowNull: false,
+      },
+      latitude: {
+        type: Sequelize.DOUBLE,
+        allowNull: false,
+      },
       jumlah_ayam: {
         type: Sequelize.INTEGER,
         allowNull: false,
@@ -29,6 +37,11 @@ module.exports = {
           model: "user",
           key: "id",
         },
+      },
+      isDeleted: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
       },
       createdAt: {
         allowNull: false,

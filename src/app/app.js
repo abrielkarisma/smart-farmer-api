@@ -7,6 +7,7 @@ var cors = require("cors");
 var indexRouter = require('../routes/index');
 var usersRouter = require('../routes/user');
 var authRouter = require('../routes/auth');
+var kandangRouter = require('../routes/kandang');
 
 var app = express();
 
@@ -20,5 +21,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/user', usersRouter);
 app.use('/auth', authRouter);
+app.use('/kandang', kandangRouter);
 
 module.exports = app;
