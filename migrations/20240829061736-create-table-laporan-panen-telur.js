@@ -18,14 +18,6 @@ module.exports = {
           key: "id",
         },
       },
-      id_petugas: {
-        type: Sequelize.UUID,
-        allowNull: false,
-        references: {
-          model: "petugas",
-          key: "id",
-        },
-      },
       jumlah_telur: {
         type: Sequelize.INTEGER,
         allowNull: false,

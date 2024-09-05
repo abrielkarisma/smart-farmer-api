@@ -9,10 +9,6 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "id_kandang",
       });
 
-      LaporanPanenTelur.belongsTo(models.Petugas, {
-        foreignKey: "id_petugas",
-      });
-
       LaporanPanenTelur.belongsTo(models.User, {
         foreignKey: "createdBy",
       });
@@ -32,14 +28,6 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         references: {
           model: "Kandang", // Make sure this matches the actual table name
-          key: "id",
-        },
-      },
-      id_petugas: {
-        type: DataTypes.UUID,
-        allowNull: false,
-        references: {
-          model: "Petugas", // Make sure this matches the actual table name
           key: "id",
         },
       },
