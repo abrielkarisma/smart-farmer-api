@@ -12,4 +12,7 @@ router.use(cors());
 router.post("/signup", userController.signUp);
 router.post("/signin", userController.signIn);
 
+router.post("/petugas/signup", userController.signUpPetugas);
+
+
 module.exports = router;

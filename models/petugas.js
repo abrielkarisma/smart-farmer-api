@@ -33,7 +33,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       id_kandang: {
         type: DataTypes.UUID,
-        allowNull: false,
+        allowNull: true,
         references: {
           model: "Kandang", // Make sure this matches the actual table name
           key: "id",

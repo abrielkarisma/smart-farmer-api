@@ -1,4 +1,4 @@
-const { User } = require("../../models/");
+const { User, Petugas } = require("../../models/");
 const {
   authData,
   generateAccessToken,
@@ -93,7 +93,7 @@ async function signIn(req, res) {
 }
 
 async function signUpPetugas(req, res) {
-  const { nama, email, password, phone, role, kode_owner } = req.body;
+  const { nama, email, password, phone, role, kode_pemilik } = req.body;
 
   const validation = await validateUser({ email, password });
 
@@ -103,20 +103,39 @@ async function signUpPetugas(req, res) {
 
   try {
     const existingUser = await User.findOne({ where: { email } });
+
     if (existingUser) {
       return res.status(400).json({
         success: false,
         message: "Email already in use",
       });
     }
+
+    const kodePemilik = await User.findOne({
+      where: { kode_user: kode_pemilik },
+    });
+
+    if (!kodePemilik) {
+      return res.status(400).json({
+        success: false,
+        message: "Kode pemilik tidak ditemukan",
+      });
+    }
+
     const trimmedPassword = password.trim();
     const hashedPassword = await bcrypt.hash(trimmedPassword, 10);
+
     const newUser = await User.create({
       nama,
       email,
       password: hashedPassword,
       no_telp: phone,
       role,
+    });
+
+    await Petugas.create({
+      user_id: newUser.id,
+      kode_pemilik,
     });
 
     const accessToken = generateAccessToken(newUser);
@@ -314,9 +333,10 @@ async function signUpPetugas(req, res) {
 module.exports = {
   signUp,
   signIn,
-//   signOut,
-//   getUser,
-//   getDetailUser,
-//   updateUser,
-//   deleteUser,
+  signUpPetugas,
+  //   signOut,
+  //   getUser,
+  //   getDetailUser,
+  //   updateUser,
+  //   deleteUser,
 };

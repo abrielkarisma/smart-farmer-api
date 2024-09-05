@@ -20,7 +20,7 @@ module.exports = {
       },
       id_kandang: {
         type: Sequelize.UUID,
-        allowNull: false,
+        allowNull: true,
         references: {
           model: "kandang",
           key: "id",
