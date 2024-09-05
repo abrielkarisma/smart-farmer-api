@@ -1,4 +1,3 @@
-const { nanoid } = require("nanoid");
 const { Model } = require("sequelize");
 const { paginate } = require("sequelize-paginate");
 
@@ -46,6 +45,7 @@ module.exports = (sequelize, DataTypes) => {
       kode_user: {
         type: DataTypes.STRING,
         allowNull: true,
+        defaultValue: Math.floor(100000 + Math.random() * 900000),
       },
       createdAt: {
         allowNull: false,
@@ -58,7 +58,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     {
       sequelize,
-      modelName: "user",
+      modelName: "User",
       tableName: "user",
     }
   );

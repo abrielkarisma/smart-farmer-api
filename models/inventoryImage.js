@@ -23,7 +23,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: "inventory", // Make sure this matches the actual table name
+          model: "Inventory", // Make sure this matches the actual table name
           key: "id",
         },
       },

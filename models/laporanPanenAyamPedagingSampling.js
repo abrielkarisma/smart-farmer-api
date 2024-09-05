@@ -31,7 +31,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: "kandang", // Make sure this matches the actual table name
+          model: "Kandang", // Make sure this matches the actual table name
           key: "id",
         },
       },
@@ -39,7 +39,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.UUID,
         allowNull: false,
         references: {
-          model: "petugas", // Make sure this matches the actual table name
+          model: "Petugas", // Make sure this matches the actual table name
           key: "id",
         },
       },
@@ -70,7 +70,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     {
       sequelize,
-      modelName: "laporanPanenAyamPedagingSampling",
+      modelName: "LaporanPanenAyamPedagingSampling",
       tableName: "laporan_panen_ayam_pedaging_sampling",
     }
   );
