@@ -8,6 +8,6 @@ const {
   checkBlacklist,
 } = require("../middlewares/auth");
 
-// router.get('/', authenticateToken, userController.getUsers);
+router.get("/", authenticateToken, userController.getDetailUser);
 
 module.exports = router;

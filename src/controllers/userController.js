@@ -234,28 +234,28 @@ async function signUpPetugas(req, res) {
 //   }
 // }
 
-// async function getDetailUser(req, res) {
-//   const id = await getIdUser(req);
-//   try {
-//     const result = await user.findOne({ where: { id } });
-//     if (!result) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "User not found",
-//       });
-//     }
-//     return res.status(200).json({
-//       success: true,
-//       message: "User retrieved successfully",
-//       data: result,
-//     });
-//   } catch (error) {
-//     return res.status(500).json({
-//       success: false,
-//       message: `Error for user with id ${id}: ${error.message}`,
-//     });
-//   }
-// }
+async function getDetailUser(req, res) {
+  const id = await getIdUser(req);
+  try {
+    const result = await User.findOne({ where: { id } });
+    if (!result) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "User retrieved successfully",
+      data: result,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: `Error for user with id ${id}: ${error.message}`,
+    });
+  }
+}
 
 // async function updateUser(req, res) {
 //   const id = await getIdUser(req);
@@ -336,7 +336,7 @@ module.exports = {
   signUpPetugas,
   //   signOut,
   //   getUser,
-  //   getDetailUser,
+    getDetailUser,
   //   updateUser,
   //   deleteUser,
 };
