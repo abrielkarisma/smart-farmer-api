@@ -10,4 +10,10 @@ const {
 
 router.get("/", authenticateToken, userController.getDetailUser);
 
+router.get("/petugas", authenticateToken, userController.getPetugasByOwner);
+
+router.get("/petugas/:id", authenticateToken, userController.getDetailPetugas);
+
+router.put("/petugas/:id", authenticateToken, userController.updatePetugas);
+
 module.exports = router;

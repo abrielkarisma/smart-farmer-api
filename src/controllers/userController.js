@@ -1,4 +1,4 @@
-const { User, Petugas } = require("../../models/");
+const { User, Petugas, Kandang } = require("../../models/");
 const {
   authData,
   generateAccessToken,
@@ -9,8 +9,9 @@ const { validateUser } = require("../validators/validator");
 const { Op } = require("sequelize");
 const { getIdUser } = require("../Utils/helper");
 const { uploadFileToSpace } = require("../middlewares/multer");
+const { id } = require("date-fns/locale");
 
-async function signUp(req, res) {
+exports.signUp = async (req, res) => {
   const { nama, email, password, phone, role } = req.body;
 
   const validation = await validateUser({ email, password });
@@ -51,9 +52,9 @@ async function signUp(req, res) {
       message: "Internal server error",
     });
   }
-}
+};
 
-async function signIn(req, res) {
+exports.signIn = async (req, res) => {
   const { email, password, deviceToken } = req.body;
 
   try {
@@ -90,9 +91,9 @@ async function signIn(req, res) {
       message: "Internal server error",
     });
   }
-}
+};
 
-async function signUpPetugas(req, res) {
+exports.signUpPetugas = async (req, res) => {
   const { nama, email, password, phone, role, kode_pemilik } = req.body;
 
   const validation = await validateUser({ email, password });
@@ -152,89 +153,75 @@ async function signUpPetugas(req, res) {
       message: "Internal server error",
     });
   }
-}
+};
 
-// async function signOut(req, res) {
-//   try {
-//     const token = req.headers.authorization.split(" ")[1];
+exports.getPetugasByOwner = async (req, res) => {
+  try {
+    const userId = await getIdUser(req);
 
-//     if (!token || authData.blacklistedTokens.includes(token)) {
-//       return res.status(401).json({
-//         success: false,
-//         message: "Unauthorized",
-//       });
-//     }
+    const searchTerm = req.query.nama;
+    const page = parseInt(req.query.page, 10) || 1;
+    const pageSize = parseInt(req.query.pageSize, 10) || 10;
 
-//     if (req.user && req.user.id && req.user.email) {
-//       clearToken(token);
-//       return res.status(200).json({
-//         success: true,
-//         message: "Logged out successfully",
-//       });
-//     } else {
-//       return res.status(401).json({
-//         success: false,
-//         message: "Unauthorized",
-//       });
-//     }
-//   } catch (error) {
-//     return res.status(500).json({
-//       success: false,
-//       message: "Internal server error",
-//     });
-//   }
-// }
+    let orders = [["createdAt", "ASC"]];
 
-// async function getUser(req, res) {
-//   try {
-//     const searchTerm = req.query.q;
-//     const page = parseInt(req.query.page, 10) || 1;
-//     const pageSize = parseInt(req.query.pageSize, 10) || 10;
+    const kodePemilik = await User.findOne({
+      where: { id: userId },
+    });
 
-//     let order = [["name", "ASC"]];
+    const whereClause = { kode_pemilik: kodePemilik.kode_user };
 
-//     const whereClause = {};
-//     if (searchTerm) {
-//       whereClause.name = { [Op.like]: `%${searchTerm}%` };
+    if (searchTerm) {
+      whereClause.nama = { [Op.like]: `%${searchTerm}%` };
+    }
 
-//       order = [];
-//     }
+    const result = await Petugas.paginate({
+      page: page,
+      paginate: pageSize,
+      where: whereClause,
+      order: orders,
+      include: [
+        {
+          model: User,
+          attributes: ["id", "nama", "email", "no_telp"],
+        },
+        {
+          model: Kandang,
+          attributes: ["id", "lokasi"],
+        },
+      ],
+    });
 
-//     const result = await user.paginate({
-//       page: page,
-//       paginate: pageSize,
-//       where: whereClause,
-//       order: order,
-//     });
+    const response = {
+      totalCount: result.total,
+      totalPages: result.pages,
+      data: result.docs.map((petugas) => {
+        return {
+          id: petugas.id,
+          user_id: petugas.user_id,
+          nama: petugas.User.nama,
+          email: petugas.User.email,
+          no_telp: petugas.User.no_telp,
+          lokasi_kandang: petugas.Kandang.lokasi,
+        };
+      }),
+    };
 
-//     const response = {
-//       totalCount: result.total,
-//       totalPages: result.pages,
-//       data: result.docs,
-//     };
+    return res.status(200).json({
+      success: true,
+      message: "Petugas fetched successfully",
+      result: response,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
 
-//     if (result.docs.length === 0) {
-//       return res.status(404).json({
-//         message: "User not found",
-//         result: response,
-//       });
-//     }
-
-//     return res.status(200).json({
-//       success: true,
-//       message: "User retrieved successfully",
-//       result: response,
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     return res.status(500).json({
-//       success: false,
-//       message: "Internal server error",
-//     });
-//   }
-// }
-
-async function getDetailUser(req, res) {
+exports.getDetailUser = async (req, res) => {
   const id = await getIdUser(req);
   try {
     const result = await User.findOne({ where: { id } });
@@ -255,88 +242,75 @@ async function getDetailUser(req, res) {
       message: `Error for user with id ${id}: ${error.message}`,
     });
   }
-}
+};
 
-// async function updateUser(req, res) {
-//   const id = await getIdUser(req);
-//   const { name, email, phone, address } = req.body;
+exports.getDetailPetugas = async (req, res) => {
+  const id = req.params.id;
+  try {
+    const result = await Petugas.findOne({
+      where: { id },
+      include: [{ model: User }, { model: Kandang }],
+    });
 
-//   try {
-//     const existingUser = await user.findOne({ where: { id } });
-//     if (!existingUser) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "User not found",
-//       });
-//     }
+    if (!result) {
+      return res.status(404).json({
+        success: false,
+        message: "Petugas not found",
+      });
+    }
 
-//     if (name) existingUser.name = name;
-//     if (email) {
-//       const existingEmail = await validateUser.validateEmail(email);
-//       if (existingEmail.error) {
-//         return res.status(400).json({
-//           success: false,
-//           message: existingEmail.error,
-//         });
-//       }
-//       existingUser.email = email;
-//     }
-//     if (phone) existingUser.phone = phone;
-//     if (address) existingUser.address = address;
-//     if (req.file) {
-//       const file = req.file;
-//       const fileName = `avatar-${Date.now()}-${file.originalname}`;
-//       const fileUrl = await uploadFileToSpace(file.buffer, fileName, "avatars");
-//       existingUser.avatar = fileUrl;
-//     }
+    const response = {
+      id: result.id,
+      user_id: result.user_id,
+      nama: result.User.nama,
+      email: result.User.email,
+      no_telp: result.User.no_telp,
+      lokasi_kandang: result.Kandang.lokasi,
+    };
 
-//     await existingUser.save();
+    return res.status(200).json({
+      success: true,
+      message: "Petugas retrieved successfully",
+      result: response,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: `Error for petugas with id ${id}: ${error.message}`,
+    });
+  }
+};
 
-//     console.log(existingUser);
+exports.updatePetugas = async (req, res) => {
+  const { id_kandang } = req.body;
+  const id = req.params.id;
+  try {
+    const petugas = await Petugas.findOne({ where: { id } });
 
-//     return res.status(200).json({
-//       success: true,
-//       message: "User updated successfully",
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     return res.status(500).json({
-//       success: false,
-//       message: "Internal server error",
-//     });
-//   }
-// }
+    if (!petugas) {
+      return res.status(404).json({
+        success: false,
+        message: "Petugas not found",
+      });
+    }
 
-// async function deleteUser(req, res) {
-//   const { id } = req.params;
-//   try {
-//     const existingUser = await user.findOne({ where: { id } });
-//     if (!existingUser) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "User not found",
-//       });
-//     }
-//     await existingUser.destroy();
-//     return res.status(200).json({
-//       success: true,
-//       message: "User deleted successfully",
-//     });
-//   } catch (error) {
-//     return res.status(500).json({
-//       success: false,
-//       message: "Internal server error",
-//     });
-//   }
-// }
+    if (!id_kandang) {
+      return res.status(400).json({
+        success: false,
+        message: "ID kandang is required",
+      });
+    }
 
-module.exports = {
-  signUp,
-  signIn,
-  signUpPetugas,
-  //   signOut,
-  //   getUser,
-    getDetailUser,
-  //   updateUser,
-  //   deleteUser,
+    await petugas.update({ id_kandang });
+
+    return res.status(200).json({
+      success: true,
+      message: "Petugas updated successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
 };

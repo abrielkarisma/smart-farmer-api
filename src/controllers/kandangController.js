@@ -151,7 +151,7 @@ exports.getDetailKandang = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Kandang retrieved successfully",
-      data: result,
+      result: result,
     });
   } catch (error) {
     console.log(error);
