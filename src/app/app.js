@@ -9,6 +9,7 @@ var usersRouter = require('../routes/user');
 var authRouter = require('../routes/auth');
 var kandangRouter = require('../routes/kandang');
 var inventoryRouter = require("../routes/inventory");
+var laporanRouter = require("../routes/laporan");
 
 var app = express();
 
@@ -24,5 +25,6 @@ app.use('/user', usersRouter);
 app.use('/auth', authRouter);
 app.use('/kandang', kandangRouter);
 app.use("/inventory", inventoryRouter);
+app.use("/laporan", laporanRouter);
 
 module.exports = app;
