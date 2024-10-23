@@ -16,4 +16,6 @@ router.get("/petugas/:id", authenticateToken, userController.getDetailPetugas);
 
 router.put("/petugas/:id", authenticateToken, userController.updatePetugas);
 
+router.get("/kode", authenticateToken, userController.getKodeOwner);
+
 module.exports = router;

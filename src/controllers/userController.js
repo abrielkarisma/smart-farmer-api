@@ -155,6 +155,25 @@ exports.signUpPetugas = async (req, res) => {
   }
 };
 
+exports.getKodeOwner = async (req, res) => {
+  try{
+    const userId = await getIdUser(req);
+
+    const user = await User.findOne({ where: { id: userId } });
+
+    return res.status(200).json({
+      success: true,
+      message: "Kode pemilik fetched successfully",
+      data: user.kode_user,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 exports.getPetugasByOwner = async (req, res) => {
   try {
     const userId = await getIdUser(req);
