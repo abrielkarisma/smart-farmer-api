@@ -20,10 +20,11 @@
     }
   },
   "production": {
-    "username": "root",
-    "password": null,
-    "database": "database_production",
-    "host": "127.0.0.1",
+    "username": "doadmin",
+    "password": "AVNS_zqRYwkUlQRMvh1uYn-Q",
+    "database": "smart_farmer_db",
+    "host": "db-mysql-sgp1-36762-do-user-17304722-0.i.db.ondigitalocean.com",
+    "port": "25060",
     "dialect": "mysql",
     "define": {
       "freezeTableName": true
