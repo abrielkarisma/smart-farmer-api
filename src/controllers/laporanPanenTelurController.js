@@ -6,15 +6,13 @@ const { config } = require("dotenv");
 config();
 
 exports.createLaporanPanenTelur = async (req, res) => {
-  const { id_kandang, jumlah } = req.body;
+  const { id_kandang, jumlah, tanggal } = req.body;
   try {
     const userId = await getIdUser(req);
 
-    const dateNow = Date.now();
-
-    const newLaporanPanenTelur = await LaporanPanenTelur.create({
+    await LaporanPanenTelur.create({
       id_kandang,
-      tanggal: dateNow,
+      tanggal: tanggal,
       jumlah_telur: jumlah,
       createdBy: userId,
     });
@@ -22,7 +20,6 @@ exports.createLaporanPanenTelur = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Laporan kematian ayam created successfully",
-      data: newLaporanPanenTelur,
     });
   } catch (error) {
     console.log(error);
@@ -101,7 +98,6 @@ exports.updateStatusLaporanPanenTelur = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Laporan panen telur updated successfully",
-      data: laporanPanenTelur,
     });
   } catch (error) {
     console.log(error);

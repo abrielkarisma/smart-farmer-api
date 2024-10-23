@@ -3,6 +3,7 @@ var router = express.Router();
 const laporanKematianController = require("../controllers/laporanKematianAyamController");
 const laporanPanenTelurController = require("../controllers/laporanPanenTelurController");
 const laporanAyamPedagingController = require("../controllers/laporanAyamPedagingController");
+const laporanController = require("../controllers/laporanController");
 const { upload } = require("../middlewares/multer");
 const {
   authenticateToken,
@@ -60,9 +61,17 @@ router.get(
 );
 
 router.put(
-  "/ayam-pedaging/sampling/:id",
+  "/ayam-pedaging/:id",
   authenticateToken,
-  laporanAyamPedagingController.updateStatusLaporanPanenAyamPedagingSampling
+  laporanAyamPedagingController.updateStatusLaporanPanenAyamPedaging
 );
+
+router.get("/", authenticateToken, laporanController.getAllLaporanByUser);
+
+router.get("/owner/all", authenticateToken, laporanController.getAllLaporanByOwner);
+router.get("/petugas/all", authenticateToken, laporanController.getAllLaporanByPetugas);
+router.get("/:id", authenticateToken, laporanController.getDetailLaporan);
+
+router.get("/statistic/:id", authenticateToken, laporanController.getStatisticByKandang);
 
 module.exports = router;

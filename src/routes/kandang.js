@@ -17,6 +17,10 @@ router.post(
 
 router.get("/", authenticateToken, kandangController.getAllKandangById);
 
+router.get("/investor", authenticateToken, kandangController.getAllKandangByInvestor);
+
+router.get("/petugas", authenticateToken, kandangController.getKandangByPetugas);
+
 router.get("/:id", authenticateToken, kandangController.getDetailKandang);
 
 router.put(

@@ -12,6 +12,14 @@ module.exports = (sequelize, DataTypes) => {
       LaporanPanenAyamPedagingSampling.belongsTo(models.User, {
         foreignKey: "createdBy",
       });
+
+      LaporanPanenAyamPedagingSampling.hasMany(
+        models.LaporanPanenAyamPedagingSamplingImage,
+        {
+          foreignKey: "id_laporan_panen_ayam_pedaging_sampling",
+          as: "images",
+        }
+      );
     }
   }
 

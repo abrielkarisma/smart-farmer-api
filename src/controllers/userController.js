@@ -6,10 +6,10 @@ const {
 } = require("../middlewares/auth");
 const bcrypt = require("bcrypt");
 const { validateUser } = require("../validators/validator");
-const { Op } = require("sequelize");
-const { getIdUser } = require("../Utils/helper");
+const { Op, where } = require("sequelize");
 const { uploadFileToSpace } = require("../middlewares/multer");
 const { id } = require("date-fns/locale");
+const { getIdUser } = require("../utils/helper");
 
 exports.signUp = async (req, res) => {
   const { nama, email, password, phone, role } = req.body;
@@ -170,20 +170,22 @@ exports.getPetugasByOwner = async (req, res) => {
     });
 
     const whereClause = { kode_pemilik: kodePemilik.kode_user };
+    const searchName = {}
 
     if (searchTerm) {
-      whereClause.nama = { [Op.like]: `%${searchTerm}%` };
+      searchName.nama = { [Op.like]: `%${searchTerm}%` };
     }
 
     const result = await Petugas.paginate({
       page: page,
       paginate: pageSize,
-      where: whereClause,
       order: orders,
+      where: whereClause, 
       include: [
         {
           model: User,
           attributes: ["id", "nama", "email", "no_telp"],
+          where: searchName,
         },
         {
           model: Kandang,
@@ -198,11 +200,11 @@ exports.getPetugasByOwner = async (req, res) => {
       data: result.docs.map((petugas) => {
         return {
           id: petugas.id,
-          user_id: petugas.user_id,
+          userId: petugas.user_id,
           nama: petugas.User.nama,
           email: petugas.User.email,
-          no_telp: petugas.User.no_telp,
-          lokasi_kandang: petugas.Kandang.lokasi,
+          noTelp: petugas.User.no_telp,
+          lokasiKandang: petugas.id_kandang !== null ? petugas.Kandang.lokasi : "Belum ditentukan",
         };
       }),
     };
@@ -261,11 +263,11 @@ exports.getDetailPetugas = async (req, res) => {
 
     const response = {
       id: result.id,
-      user_id: result.user_id,
+      userId: result.user_id,
       nama: result.User.nama,
       email: result.User.email,
-      no_telp: result.User.no_telp,
-      lokasi_kandang: result.Kandang.lokasi,
+      noTelp: result.User.no_telp,
+      lokasiKandang: result.id_kandang == null ? "Belum ditentukan" : result.Kandang.lokasi,
     };
 
     return res.status(200).json({

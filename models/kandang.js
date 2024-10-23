@@ -10,6 +10,7 @@ module.exports = (sequelize, DataTypes) => {
 
       Kandang.hasMany(models.KandangImage, {
         foreignKey: "id_kandang",
+        as: "kandangImages",
       });
     }
   }

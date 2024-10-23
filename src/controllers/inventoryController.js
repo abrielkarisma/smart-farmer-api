@@ -1,5 +1,12 @@
-const { Inventory, LogInventory, InventoryImage, User } = require("../../models/");
-const { Op } = require("sequelize");
+const {
+  Inventory,
+  LogInventory,
+  InventoryImage,
+  User,
+  Kandang,
+  Petugas,
+} = require("../../models/");
+const { Op, where } = require("sequelize");
 const { uploadFileToSpace } = require("../middlewares/multer");
 const { getIdUser } = require("../utils/helper");
 const { id } = require("date-fns/locale");
@@ -66,15 +73,14 @@ exports.getInventoryByKandang = async (req, res) => {
     let order = [["name", "ASC"]];
 
     const whereClause = { id_kandang: req.params.id, isDeleted: false };
+
     if (searchTerm) {
       whereClause.name = { [Op.like]: `%${searchTerm}%` };
-
       order = [];
     }
 
     if (searchCategory) {
       whereClause.jenis = { [Op.like]: `%${searchCategory}%` };
-
       order = [];
     }
 
@@ -85,35 +91,186 @@ exports.getInventoryByKandang = async (req, res) => {
       order: order,
     });
 
+    if (result.docs.length === 0) {
+      return res.status(200).json({
+        success: false,
+        message: "Inventory not found",
+        result: { totalCount: 0, totalPages: 0, data: [] },
+      });
+    }
+
+    const inventoryIds = result.docs.map((inventory) => inventory.id);
     const images = await InventoryImage.findAll({
-      where: {
-        id_inventory: result.docs.map((inventory) => inventory.id),
-      },
-      attributes: ["url"],
+      where: { id_inventory: inventoryIds },
+      attributes: ["id_inventory", "url"],
+    });
+
+    const inventoryWithImages = result.docs.map((inventory) => {
+      const inventoryImages = images
+        .filter((image) => image.id_inventory === inventory.id)
+        .map((image) => ({ url: image.url }));
+      return {
+        ...inventory.toJSON(),
+        images: inventoryImages,
+      };
     });
 
     const response = {
       totalCount: result.total,
       totalPages: result.pages,
-      data: result.docs.map((inventory) => {
-        return {
-          ...inventory.toJSON(),
-          images,
-        };
-      }),
+      data: inventoryWithImages,
     };
+
+    return res.status(200).json({
+      success: true,
+      message: "Inventory retrieved successfully",
+      result: response,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+exports.getInventoryByPetugas = async (req, res) => {
+  try {
+    const searchTerm = req.query.name;
+    const searchCategory = req.query.jenis;
+    const page = parseInt(req.query.page, 10) || 1;
+    const pageSize = parseInt(req.query.pageSize, 10) || 10;
+
+    const userId = await getIdUser(req);
+
+    const petugas = await Petugas.findOne({ where: { user_id: userId } });
+
+    let order = [["name", "ASC"]];
+
+    const whereClause = { id_kandang: petugas.id_kandang, isDeleted: false };
+
+    if (searchTerm) {
+      whereClause.name = { [Op.like]: `%${searchTerm}%` };
+      order = [];
+    }
+
+    if (searchCategory) {
+      whereClause.jenis = { [Op.like]: `%${searchCategory}%` };
+      order = [];
+    }
+
+    const result = await Inventory.paginate({
+      page: page,
+      paginate: pageSize,
+      where: whereClause,
+      order: order,
+    });
 
     if (result.docs.length === 0) {
       return res.status(200).json({
         success: false,
         message: "Inventory not found",
-        result: response,
+        result: { totalCount: 0, totalPages: 0, data: [] },
       });
     }
+
+    const inventoryIds = result.docs.map((inventory) => inventory.id);
+    const images = await InventoryImage.findAll({
+      where: { id_inventory: inventoryIds },
+      attributes: ["id_inventory", "url"],
+    });
+
+    const inventoryWithImages = result.docs.map((inventory) => {
+      const inventoryImages = images
+        .filter((image) => image.id_inventory === inventory.id)
+        .map((image) => ({ url: image.url }));
+      return {
+        ...inventory.toJSON(),
+        images: inventoryImages,
+      };
+    });
+
+    const response = {
+      totalCount: result.total,
+      totalPages: result.pages,
+      data: inventoryWithImages,
+    };
 
     return res.status(200).json({
       success: true,
       message: "Inventory retrieved successfully",
+      result: response,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+exports.getHistoryInventory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const kategori = req.query.kategori;
+    const page = parseInt(req.query.page, 10) || 1;
+    const pageSize = parseInt(req.query.pageSize, 10) || 10;
+
+    const whereClause = {}
+
+    if(kategori) {
+      whereClause.jenis = { [Op.like]: `%${kategori}%` };
+    }
+
+    const result = await LogInventory.paginate({
+      page: page,
+      paginate: pageSize,
+      include: [
+        {
+          model: User,
+          attributes: ["id", "nama", "email", "no_telp"],
+        },
+        {
+          model: Inventory,
+          where: whereClause,
+          include: [
+            {
+              model: Kandang,
+              where: { id: id },
+            },
+          ],
+        },
+      ],
+      order: [["createdAt", "DESC"]],
+    });
+
+    if (result.docs.length === 0) {
+      return res.status(200).json({
+        success: false,
+        message: "Inventory history not found",
+        result: [],
+      });
+    }
+
+    const response = {
+      totalCount: result.total,
+      totalPages: result.pages,
+      data: result.docs.map((history) => {
+        return {
+          id: history.id,
+          namaItem: history.Inventory.name,
+          keterangan: history.keterangan,
+          createdBy: history.User.nama,
+          createdAt: history.createdAt,
+        };
+      }),
+    };
+
+    return res.status(200).json({
+      success: true,
+      message: "Inventory history retrieved successfully",
       result: response,
     });
   } catch (error) {
@@ -142,8 +299,18 @@ exports.getDetailInventory = async (req, res) => {
     });
 
     const response = {
-      ...result.toJSON(),
-      images: images ? images.map((image) => image.url) : [],
+      // ...result.toJSON(),
+      id: result.id,
+      idKandang: result.id_kandang,
+      name: result.name,
+      stock: result.stock,
+      jenis: result.jenis,
+      isDeleted: result.isDeleted,
+      createdAt: result.createdAt,
+      updatedAt: result.updatedAt,
+      images: images
+        ? images.map((image) => ({ id: image.id, url: image.url }))
+        : [],
     };
 
     return res.status(200).json({
@@ -285,38 +452,38 @@ exports.updateInventory = async (req, res) => {
 };
 
 exports.deleteInventory = async (req, res) => {
-    const { id } = req.params;
-    try {
-        const userId = await getIdUser(req);
+  const { id } = req.params;
+  try {
+    const userId = await getIdUser(req);
 
-        const userData = await User.findOne({ where: { id: userId } });
+    const userData = await User.findOne({ where: { id: userId } });
 
-      const existingInventory = await Inventory.findOne({ where: { id } });
+    const existingInventory = await Inventory.findOne({ where: { id } });
 
-      if (!existingInventory) {
-        return res.status(404).json({
-          success: false,
-          message: "Inventory not found",
-        });
-      }
-
-      existingInventory.update({ isDeleted: true });
-      await existingInventory.save();
-
-      await LogInventory.create({
-        id_inventory: existingInventory.id,
-        keterangan: `${userData.nama} (as ${userData.role}) deleted ${existingInventory.name}`,
-        createdBy: userId,
-      });
-
-      return res.status(200).json({
-        success: true,
-        message: "Inventory deleted successfully",
-      });
-    } catch (error) {
-      return res.status(500).json({
+    if (!existingInventory) {
+      return res.status(404).json({
         success: false,
-        message: "Internal server error",
+        message: "Inventory not found",
       });
     }
+
+    existingInventory.update({ isDeleted: true });
+    await existingInventory.save();
+
+    await LogInventory.create({
+      id_inventory: existingInventory.id,
+      keterangan: `${userData.nama} (as ${userData.role}) deleted ${existingInventory.name}`,
+      createdBy: userId,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Inventory deleted successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
 };

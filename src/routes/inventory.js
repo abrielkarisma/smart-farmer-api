@@ -21,6 +21,18 @@ router.get(
   inventoryController.getInventoryByKandang
 );
 
+router.get(
+  "/petugas",
+  authenticateToken,
+  inventoryController.getInventoryByPetugas
+);
+
+router.get(
+  "/history/:id",
+  authenticateToken,
+  inventoryController.getHistoryInventory
+);
+
 // router.get("/", authenticateToken, kandangController.getAllKandangById);
 
 router.get("/:id", authenticateToken, inventoryController.getDetailInventory);

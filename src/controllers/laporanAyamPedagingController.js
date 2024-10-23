@@ -1,4 +1,11 @@
-const { LaporanPanenAyamPedagingSampling, LaporanPanenAyamPedagingSamplingImage, Kandang, User } = require("../../models/");
+const {
+  LaporanPanenAyamPedagingSampling,
+  LaporanPanenAyamPedagingSamplingImage,
+  Kandang,
+  User,
+  LaporanPanenAyamPedagingManual,
+  LaporanPanenAyamPedagingManualImage,
+} = require("../../models/");
 const { Op, where, Sequelize, fn, literal, col } = require("sequelize");
 const jwt = require("jsonwebtoken");
 const { getIdUser } = require("../utils/helper");
@@ -11,7 +18,7 @@ const { config } = require("dotenv");
 config();
 
 exports.createLaporanAyamPedagingSampling = async (req, res) => {
-  const { id_kandang, jumlah } = req.body;
+  const { id_kandang, jumlah, tanggal } = req.body;
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({
@@ -22,14 +29,13 @@ exports.createLaporanAyamPedagingSampling = async (req, res) => {
 
     const userId = await getIdUser(req);
 
-    const dateNow = Date.now();
-
-    const newLaporanAyamPedagingSampling = await LaporanPanenAyamPedagingSampling.create({
-      id_kandang,
-      tanggal: dateNow,
-      total_berat: jumlah,
-      createdBy: userId,
-    });
+    const newLaporanAyamPedagingSampling =
+      await LaporanPanenAyamPedagingSampling.create({
+        id_kandang,
+        tanggal: tanggal,
+        total_berat: jumlah,
+        createdBy: userId,
+      });
 
     const uploadedImages = [];
 
@@ -47,15 +53,15 @@ exports.createLaporanAyamPedagingSampling = async (req, res) => {
 
     for (let i = 0; i < uploadedImages.length; i++) {
       await LaporanPanenAyamPedagingSamplingImage.create({
-          id_laporan_panen_ayam_pedaging_sampling: newLaporanAyamPedagingSampling.id,
-          url: uploadedImages[i],
+        id_laporan_panen_ayam_pedaging_sampling:
+          newLaporanAyamPedagingSampling.id,
+        url: uploadedImages[i],
       });
     }
 
     return res.status(200).json({
       success: true,
       message: "Laporan kematian ayam created successfully",
-      data: newLaporanAyamPedagingSampling,
     });
   } catch (error) {
     console.log(error);
@@ -69,15 +75,16 @@ exports.createLaporanAyamPedagingSampling = async (req, res) => {
 exports.getDetailLaporanPanenAyamPedagingSampling = async (req, res) => {
   const { id } = req.params;
   try {
-    const laporanPanenAyamPedagingSampling = await LaporanPanenAyamPedagingSampling.findOne({
-      where: { id },
-      include: [
-        {
-          model: User,
-          attributes: ["id", "nama", "email", "no_telp"],
-        },
-      ],
-    });
+    const laporanPanenAyamPedagingSampling =
+      await LaporanPanenAyamPedagingSampling.findOne({
+        where: { id },
+        include: [
+          {
+            model: User,
+            attributes: ["id", "nama", "email", "no_telp"],
+          },
+        ],
+      });
 
     if (!laporanPanenAyamPedagingSampling) {
       return res.status(404).json({
@@ -117,28 +124,43 @@ exports.getDetailLaporanPanenAyamPedagingSampling = async (req, res) => {
   }
 };
 
-exports.updateStatusLaporanPanenAyamPedagingSampling = async (req, res) => {
+exports.updateStatusLaporanPanenAyamPedaging = async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
   try {
-    const laporanPanenAyamPedagingSampling = await LaporanPanenAyamPedagingSampling.findOne({
-      where: { id },
-    });
+    let laporanPanenAyamPedagingSampling =
+      await LaporanPanenAyamPedagingSampling.findOne({
+        where: { id },
+      });
 
-    if (!laporanPanenAyamPedagingSampling) {
-      return res.status(404).json({
-        success: false,
-        message: "Laporan kematian ayam not found",
+    if (laporanPanenAyamPedagingSampling) {
+      laporanPanenAyamPedagingSampling.status = status;
+      await laporanPanenAyamPedagingSampling.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Status berhasil diubah",
       });
     }
 
-    laporanPanenAyamPedagingSampling.status = status;
-    await laporanPanenAyamPedagingSampling.save();
+    let laporanPanenAyamPedagingManual =
+      await LaporanPanenAyamPedagingManual.findOne({
+        where: { id },
+      });
 
-    return res.status(200).json({
-      success: true,
-      message: "Laporan kematian ayam updated successfully",
-      data: laporanPanenAyamPedagingSampling,
+    if (laporanPanenAyamPedagingManual) {
+      laporanPanenAyamPedagingManual.status = status;
+      await laporanPanenAyamPedagingManual.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Status berhasil diubah",
+      });
+    }
+
+    return res.status(404).json({
+      success: false,
+      message: "Laporan panen ayam pedaging not found",
     });
   } catch (error) {
     console.log(error);
@@ -147,4 +169,4 @@ exports.updateStatusLaporanPanenAyamPedagingSampling = async (req, res) => {
       message: "Internal server error",
     });
   }
-}
+};
