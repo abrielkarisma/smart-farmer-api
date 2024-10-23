@@ -20,26 +20,46 @@ exports.signUp = async (req, res) => {
     return res.status(400).json({ success: false, message: validation.error });
   }
 
+  const transaction = await sequelize.transaction();
+  
   try {
-    const existingUser = await User.findOne({ where: { email } });
+    const existingUser = await User.findOne({ where: { email } }, { transaction });
     if (existingUser) {
+      await transaction.rollback();
       return res.status(400).json({
         success: false,
         message: "Email already in use",
       });
     }
+    
     const trimmedPassword = password.trim();
     const hashedPassword = await bcrypt.hash(trimmedPassword, 10);
+
     const newUser = await User.create({
       nama,
       email,
       password: hashedPassword,
       no_telp: phone,
       role,
-    });
+    }, { transaction });
+
+    if(newUser.role == 'pemilik'){
+      await Kandang.create(
+        {
+          nama: "Kandang Baru",
+          lokasi: "Indonesia",
+          latitude: 0,
+          longitude: 0,
+          id_pemilik: newUser.id,
+          jumlah_ayam: 0,
+        },
+        { transaction }
+      );
+    }
 
     const accessToken = generateAccessToken(newUser);
 
+    await transaction.commit();
     return res.status(200).json({
       success: true,
       message: "User created successfully",
@@ -47,8 +67,9 @@ exports.signUp = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
+    await transaction.rollback();
     return res.status(500).json({
-      sucess: false,
+      success: false,
       message: "Internal server error",
     });
   }
