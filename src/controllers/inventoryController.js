@@ -65,6 +65,7 @@ exports.createInventory = async (req, res) => {
 
 exports.getInventoryByKandang = async (req, res) => {
   try {
+    const id = req.params.id;
     const searchTerm = req.query.name;
     const searchCategory = req.query.jenis;
     const page = parseInt(req.query.page, 10) || 1;
@@ -72,7 +73,14 @@ exports.getInventoryByKandang = async (req, res) => {
 
     let order = [["name", "ASC"]];
 
-    const whereClause = { id_kandang: req.params.id, isDeleted: false };
+    if(id == null){
+      return res.status(400).json({
+        success: false,
+        message: "Kandang not found",
+      });
+    }
+    
+    const whereClause = { id_kandang: id, isDeleted: false };
 
     if (searchTerm) {
       whereClause.name = { [Op.like]: `%${searchTerm}%` };
@@ -83,6 +91,7 @@ exports.getInventoryByKandang = async (req, res) => {
       whereClause.jenis = { [Op.like]: `%${searchCategory}%` };
       order = [];
     }
+
 
     const result = await Inventory.paginate({
       page: page,
