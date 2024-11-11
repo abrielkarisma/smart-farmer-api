@@ -1,4 +1,4 @@
-const { User, Petugas, Kandang } = require("../../models/");
+const { User, Petugas, Kandang, sequelize } = require("../../models/");
 const {
   authData,
   generateAccessToken,
@@ -60,6 +60,7 @@ exports.signUp = async (req, res) => {
     const accessToken = generateAccessToken(newUser);
 
     await transaction.commit();
+    
     return res.status(200).json({
       success: true,
       message: "User created successfully",
@@ -105,8 +106,10 @@ exports.signIn = async (req, res) => {
       success: true,
       message: "User logged in successfully",
       token: accessToken,
+      role: existingUser.role,
     });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",

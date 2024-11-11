@@ -5,6 +5,7 @@ const { employee } = require("../../models");
 dotenv = require("dotenv");
 dotenv.config();
 
+
 const authData = {
   blacklistedTokens: [],
 };
