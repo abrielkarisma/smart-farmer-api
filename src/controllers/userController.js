@@ -1,4 +1,4 @@
-const { User, Petugas, Kandang } = require("../../models/");
+const { User, Petugas, Kandang, sequelize } = require("../../models/");
 const {
   authData,
   generateAccessToken,
